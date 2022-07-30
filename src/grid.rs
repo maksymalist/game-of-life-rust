@@ -58,21 +58,44 @@ impl Grid {
 
     pub fn get_cell_neighbours(&self, x: usize, y: usize) -> i32 {
         let mut neighbours: i32 = 0;
-        for i in -1..2 {
-            for j in -1..2 {
-                if i == 0 && j == 0 {
-                    continue;
-                }
-                let x_ = x as i32 + i;
-                let y_ = y as i32 + j;
-                if x_ < 0 || x_ >= self.width as i32 || y_ < 0 || y_ >= self.height as i32 {
-                    continue;
-                }
-                if self.cells[y_ as usize][x_ as usize].is_alive() {
-                    neighbours += 1;
-                }
-            }
+
+       if x <= 0 || y <= 0 || x >= self.width - 1 || y >= self.height - 1 {
+           return 0;
+         }
+
+        //top left
+        if self.cells[y-1][x-1].is_alive() {
+            neighbours += 1;
         }
+        //top
+        if self.cells[y-1][x].is_alive() {
+            neighbours += 1;
+        }
+        //top right
+        if self.cells[y-1][x+1].is_alive() {
+            neighbours += 1;
+        }
+        //left
+        if self.cells[y][x-1].is_alive() {
+            neighbours += 1;
+        }
+        //right
+        if self.cells[y][x+1].is_alive() {
+            neighbours += 1;
+        }
+        //bottom left
+        if self.cells[y+1][x-1].is_alive() {
+            neighbours += 1;
+        }
+        //bottom
+        if self.cells[y+1][x].is_alive() {
+            neighbours += 1;
+        }
+        //bottom right
+        if self.cells[y+1][x+1].is_alive() {
+            neighbours += 1;
+        }
+
         neighbours
     }
 
