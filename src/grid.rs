@@ -7,11 +7,12 @@ pub struct Cell {
     pub alive: bool,
     pub neighbors: i32,
 }
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Grid {
     cells: Vec<Vec<Cell>>,
     width: usize,
     height: usize,
+    gen: i32,
 }
 
 impl Cell {
@@ -49,6 +50,7 @@ impl Grid {
             cells,
             width,
             height,
+            gen: 0
         }
     }
 
@@ -105,6 +107,26 @@ impl Grid {
 
     pub fn kill_cell(&mut self, x: usize, y: usize) {
         self.cells[y][x].set_state(false);
+    }
+
+    pub fn increment_gen(&mut self){
+        self.gen += 1;
+    }
+
+    pub fn get_gen(&self) -> i32{
+        self.gen
+    }
+
+    pub fn clear(&mut self){
+        let mut cells = Vec::new();
+        for _ in 0..self.height {
+            let mut row = Vec::new();
+            for _ in 0..self.width {
+                row.push(Cell::new(false, 0));
+            }
+            cells.push(row);
+        }
+        self.cells = cells;
     }
 
 }
