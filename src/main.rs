@@ -18,13 +18,24 @@ fn setup_camera(mut commands: Commands) {
     commands.spawn_bundle(Camera2dBundle::default());
 }
 
-fn spawn_grid(mut commands: Commands, mut grid: ResMut<grid::Grid>, data: Res<InspectableData>) {
+fn randomize(data: &mut InspectableData){
+    data.color = Color::rgb(rand::thread_rng().gen_range(0.0, 1.0), rand::thread_rng().gen_range(0.0, 1.0), rand::thread_rng().gen_range(0.0, 1.0));
+    let random_range_1: i32 = rand::thread_rng().gen_range(2, 4);
+    let random_range_2: i32 = rand::thread_rng().gen_range(random_range_1+1, 8);
+    let random_range: Range<i32> = random_range_1..random_range_2;
+    data.min_to_revive = random_range;
+    data.min_to_die = rand::thread_rng().gen_range(2, 4);
+    data.max_to_die = rand::thread_rng().gen_range(1, 6);
+}
+
+fn spawn_grid(mut commands: Commands, mut grid: ResMut<grid::Grid>, mut data: ResMut<InspectableData>) {
     let g: Vec<Vec<grid::Cell>> = grid.get().to_vec();
     grid.increment_gen();
     //random number from range 1 to 7
 
     //(WIDTH * -1.0) / 2.0) as f32, (HEIGHT / 2.0) as f32,
 
+    let mut cataclysm: bool = true;
     for (idx1, i) in g.iter().enumerate(){
        for (idx2, j) in i.iter().enumerate() {
 
@@ -43,6 +54,11 @@ fn spawn_grid(mut commands: Commands, mut grid: ResMut<grid::Grid>, data: Res<In
         else if neighbors >= data.max_to_die {
             grid.kill_cell(idx2, idx1);
         }
+
+        if j.is_alive() {
+            cataclysm = false;
+        }
+
         commands
         .spawn_bundle(SpriteBundle {
             sprite: Sprite {
@@ -70,6 +86,19 @@ fn spawn_grid(mut commands: Commands, mut grid: ResMut<grid::Grid>, data: Res<In
         });
         
        }
+    }
+    if cataclysm && data.infinit {
+        let max_x: f32 = WIDTH / CELL_SIZE - 1.0;
+        let max_y: f32 = HEIGHT / CELL_SIZE - 1.0;
+    
+        for _ in 0..100 {
+            let x = rand::thread_rng().gen_range(0.0, max_x);
+            let y = rand::thread_rng().gen_range(0.0, max_y);
+            grid.revive_cell(x as usize, y as usize);
+        }
+    }
+    if data.random && grid.get_gen() % 16 == 0 {
+        randomize(&mut data)
     }
 }
 
@@ -132,6 +161,8 @@ struct InspectableData {
     min_to_die: i32,
     min_to_revive: Range<i32>,
     max_to_die: i32,
+    random: bool,
+    infinit: bool,
 }
 
 
@@ -142,9 +173,12 @@ impl Default for InspectableData {
             min_to_die: 1,
             min_to_revive: 1..3,
             max_to_die: 8,
+            random: false,
+            infinit: false,
         }
     }
 }
+
 
 fn main() {
     let r: f32 = WIDTH / CELL_SIZE;
