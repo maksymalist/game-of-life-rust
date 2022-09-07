@@ -29,6 +29,9 @@ fn randomize(data: &mut InspectableData){
 }
 
 fn spawn_grid(mut commands: Commands, mut grid: ResMut<grid::Grid>, mut data: ResMut<InspectableData>) {
+    if data.pause {
+        return;
+    }
     let g: Vec<Vec<grid::Cell>> = grid.get().to_vec();
     grid.increment_gen();
     //random number from range 1 to 7
@@ -84,6 +87,27 @@ fn spawn_grid(mut commands: Commands, mut grid: ResMut<grid::Grid>, mut data: Re
             alive: j.is_alive(),
             neighbors: grid.get_cell_neighbours(idx2, idx1),
         });
+
+        let neighbors: i32 = grid.get_cell_neighbours(idx1, idx2);
+
+        // min neighbor = 1
+        if neighbors < data.min_to_die {
+            grid.kill_cell(idx2, idx1);
+        }
+
+        // min neibors to revive = 2 || 1
+        else if data.min_to_revive.contains(&neighbors)  {
+            grid.revive_cell(idx2, idx1);
+        }
+        // min neighbors to kill = 3 || 4 || 5 || 6 || 7 || 8
+        else if neighbors >= data.max_to_die {
+            grid.kill_cell(idx2, idx1);
+        }
+
+        if j.is_alive() {
+            cataclysm = false;
+        }
+
         
        }
     }
@@ -104,11 +128,27 @@ fn spawn_grid(mut commands: Commands, mut grid: ResMut<grid::Grid>, mut data: Re
 
 fn despawn_system<M: Component>(
     mut commands: Commands, 
-    query: Query<Entity, With<M>>
+    query: Query<Entity, With<M>>,
+    data: Res<InspectableData>
 ) {
+    if data.pause {
+        return;
+    }
     query.for_each(|entity| {
         commands.entity(entity).despawn();
     });
+}
+
+pub fn draw(mut grid: ResMut<grid::Grid>, matrix: Vec<Vec<usize>>, start_x: usize, start_y: usize) {
+
+    for i in 0..matrix.len() {
+        for j in 0..matrix[i].len() {
+            if matrix[i][j] == 1 {
+                grid.revive_cell(j + start_x, i+start_y);
+            }
+        }
+    }
+
 }
 
 pub fn spawn_cells(mut grid: ResMut<grid::Grid>){
@@ -116,11 +156,20 @@ pub fn spawn_cells(mut grid: ResMut<grid::Grid>){
     let max_x: f32 = WIDTH / CELL_SIZE - 1.0;
     let max_y: f32 = HEIGHT / CELL_SIZE - 1.0;
 
-    for _ in 0..100 {
-        let x = rand::thread_rng().gen_range(0.0, max_x);
-        let y = rand::thread_rng().gen_range(0.0, max_y);
-        grid.revive_cell(x as usize, y as usize);
-    }
+    // for _ in 0..1000 {
+    //     let x = rand::thread_rng().gen_range(0.0, max_x);
+    //     let y = rand::thread_rng().gen_range(0.0, max_y);
+    //     grid.revive_cell(x as usize, y as usize);
+    // }
+
+    let glider = vec![
+        vec![0, 1, 1, 0],
+        vec![0, 0, 0, 0],
+        vec![1, 0, 0, 1],
+        vec![0, 0, 0, 0],
+    ];
+
+    draw(grid, glider, (max_x/2.0)as usize, (max_y/2.0)as usize);
     // grid.revive_cell(10 as usize, 10 as usize);
     // grid.revive_cell(11 as usize, 10 as usize);
     // grid.revive_cell(12 as usize, 10 as usize);
@@ -130,9 +179,10 @@ pub fn spawn_cells(mut grid: ResMut<grid::Grid>){
 
     
     //GLIDER//
-    // [[0, 0, 1]
-    // [1, 0, 1]
-    // [0, 1, 1]]
+    // [0, 0, 1, 0]
+    // [1, 0, 0, 0]
+    // [1, 0, 0, 0]
+    // [0, 0, 1, 0]
 
     // grid.revive_cell(12 as usize, 9 as usize);
     // grid.revive_cell(10 as usize, 10 as usize);
@@ -163,6 +213,7 @@ struct InspectableData {
     max_to_die: i32,
     random: bool,
     infinit: bool,
+    pause: bool,
 }
 
 
@@ -170,11 +221,12 @@ impl Default for InspectableData {
     fn default() -> Self {
         Self {
             color: Color::rgb(0.337, 0.0, 1.0),
-            min_to_die: 1,
-            min_to_revive: 1..3,
-            max_to_die: 8,
+            min_to_die: 2,
+            min_to_revive: 2..3,
+            max_to_die: 1,
             random: false,
             infinit: false,
+            pause: false,
         }
     }
 }
