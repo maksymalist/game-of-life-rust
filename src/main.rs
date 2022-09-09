@@ -19,13 +19,16 @@ fn setup_camera(mut commands: Commands) {
 }
 
 fn randomize(data: &mut InspectableData){
-    data.color = Color::rgb(rand::thread_rng().gen_range(0.0, 1.0), rand::thread_rng().gen_range(0.0, 1.0), rand::thread_rng().gen_range(0.0, 1.0));
     let random_range_1: i32 = rand::thread_rng().gen_range(2, 4);
     let random_range_2: i32 = rand::thread_rng().gen_range(random_range_1+1, 8);
     let random_range: Range<i32> = random_range_1..random_range_2;
     data.min_to_revive = random_range;
     data.min_to_die = rand::thread_rng().gen_range(2, 4);
     data.max_to_die = rand::thread_rng().gen_range(1, 6);
+}
+
+fn rainbow_colors(data: &mut InspectableData){
+    data.color = Color::rgb(rand::thread_rng().gen_range(0.0, 1.0), rand::thread_rng().gen_range(0.0, 1.0), rand::thread_rng().gen_range(0.0, 1.0));
 }
 
 fn spawn_grid(mut commands: Commands, mut grid: ResMut<grid::Grid>, mut data: ResMut<InspectableData>) {
@@ -121,6 +124,9 @@ fn spawn_grid(mut commands: Commands, mut grid: ResMut<grid::Grid>, mut data: Re
             grid.revive_cell(x as usize, y as usize);
         }
     }
+    if data.rainbow && grid.get_gen() % 16 == 0 {
+        rainbow_colors(&mut data);
+    }
     if data.random && grid.get_gen() % 16 == 0 {
         randomize(&mut data)
     }
@@ -213,6 +219,7 @@ struct InspectableData {
     max_to_die: i32,
     random: bool,
     infinit: bool,
+    rainbow: bool,
     pause: bool,
 }
 
@@ -226,6 +233,7 @@ impl Default for InspectableData {
             max_to_die: 1,
             random: false,
             infinit: false,
+            rainbow: false,
             pause: false,
         }
     }
