@@ -124,7 +124,7 @@ fn spawn_grid(mut commands: Commands, mut grid: ResMut<grid::Grid>, mut data: Re
             grid.revive_cell(x as usize, y as usize);
         }
     }
-    if data.rainbow && grid.get_gen() % 16 == 0 {
+    if data.rainbow && grid.get_gen() % 2 == 0 {
         rainbow_colors(&mut data);
     }
     if data.random && grid.get_gen() % 16 == 0 {
@@ -250,7 +250,7 @@ fn main() {
     App::new()
         .insert_resource(ClearColor(Color::rgb(0.0, 0.0, 0.0)))
         .insert_resource(WindowDescriptor {
-            title: "Game of Life".to_string(),
+            title: "Simulation.exe".to_string(),
             width: WIDTH,
             height: HEIGHT,
             ..default()
